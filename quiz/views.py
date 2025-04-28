@@ -4,12 +4,8 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
-from django.db.models import Count, Q, Sum, Case, When, IntegerField, F
+from django.db.models import Count, Q
 from django.contrib import messages
-from django.utils import timezone
-from django.contrib.auth.models import User
-from django.core.paginator import Paginator
-from datetime import timedelta
 import random
 
 from .models import Topic, Question, UserAnswer
@@ -90,7 +86,12 @@ def start_quiz(request, topic_id):
     unanswered_questions = questions.exclude(id__in=answered_correctly)
     
     if not unanswered_questions:
-        return redirect('quiz_results', topic_id=topic.id)
+        messages.success(
+            request, 
+            f'Поздравляем! Вы правильно ответили на все вопросы темы "{topic.title}". '
+            f'Вы можете сбросить прогресс и начать заново.'
+        )
+        return redirect('topic_detail', topic_id=topic.id)
     
     question = random.choice(list(unanswered_questions))
     
@@ -123,7 +124,7 @@ def quiz_question(request, topic_id, question_id):
                 next_url = reverse_lazy('quiz_question', kwargs={
                     'topic_id': topic.id, 
                     'question_id': next_question.id
-                }) if next_question else reverse_lazy('quiz_results', kwargs={'topic_id': topic.id})
+                }) if next_question else None
                 
                 return JsonResponse({
                     'success': True,
@@ -136,7 +137,11 @@ def quiz_question(request, topic_id, question_id):
             next_question = _get_next_question(request.user, topic)
             
             if not next_question:
-                return redirect('quiz_results', topic_id=topic.id)
+                messages.success(
+                    request, 
+                    f'Поздравляем! Вы завершили все вопросы темы "{topic.title}".'
+                )
+                return redirect('topic_detail', topic_id=topic.id)
             
             return redirect('quiz_question', topic_id=topic.id, question_id=next_question.id)
     else:
@@ -161,110 +166,6 @@ def quiz_question(request, topic_id, question_id):
     }
     
     return render(request, 'quiz/quiz_question.html', context)
-
-
-@login_required
-def quiz_results(request, topic_id):
-    topic = get_object_or_404(Topic, id=topic_id)
-    
-    user_answers = UserAnswer.objects.filter(
-        user=request.user,
-        question__topic=topic
-    ).select_related('question')
-    
-    total_questions = Question.objects.filter(topic=topic).count()
-    answered_questions = user_answers.values('question').distinct().count()
-    correct_answers = user_answers.filter(is_correct=True).count()
-    incorrect_answers = answered_questions - correct_answers
-    
-    if answered_questions > 0:
-        percentage_score = round((correct_answers / answered_questions) * 100)
-    else:
-        percentage_score = 0
-    
-    related_topics = Topic.objects.exclude(id=topic_id).annotate(
-        questions_count=Count('questions')
-    ).order_by('?')[:3]  
-    
-    context = {
-        'topic': topic,
-        'user_answers': user_answers,
-        'total_questions': total_questions,
-        'answered_questions': answered_questions,
-        'correct_answers': correct_answers,
-        'incorrect_answers': incorrect_answers,
-        'percentage_score': percentage_score,
-        'related_topics': related_topics,
-    }
-    
-    return render(request, 'quiz/result_quiz.html', context)
-
-
-@login_required
-def leaderboard(request):
-    filter_type = request.GET.get('filter', 'overall')
-    topic_id = request.GET.get('topic')
-    
-    user_answers_query = UserAnswer.objects.all()
-    
-    if filter_type == 'weekly':
-        week_ago = timezone.now() - timedelta(days=7)
-        user_answers_query = user_answers_query.filter(created_at__gte=week_ago)
-    elif filter_type == 'monthly':
-        month_ago = timezone.now() - timedelta(days=30)
-        user_answers_query = user_answers_query.filter(created_at__gte=month_ago)
-    elif filter_type == 'topics' and topic_id:
-        user_answers_query = user_answers_query.filter(question__topic_id=topic_id)
-    
-    users_stats = []
-    
-    users = User.objects.filter(is_active=True).distinct()
-    for user in users:
-        user_answers = user_answers_query.filter(user=user)
-        correct_count = user_answers.filter(is_correct=True).count()
-        total_count = user_answers.count()
-        
-        if total_count == 0:
-            continue
-        
-        success_rate = (correct_count / total_count * 100) if total_count > 0 else 0
-        points = correct_count * 10 - (total_count - correct_count) * 2  
-        
-        users_stats.append({
-            'user': user,
-            'correct_answers': correct_count,
-            'total_answers': total_count,
-            'success_rate': success_rate,
-            'points': points
-        })
-    
-    users_stats.sort(key=lambda x: x['points'], reverse=True)
-    
-    user_position = None
-    total_users = len(users_stats)
-    
-    if request.user.is_authenticated:
-        for index, stats in enumerate(users_stats):
-            if stats['user'] == request.user:
-                user_position = index + 1
-                break
-    
-    paginator = Paginator(users_stats, 10) 
-    page = request.GET.get('page')
-    leaderboard = paginator.get_page(page)
-    
-    topics = Topic.objects.all()
-    
-    context = {
-        'leaderboard': leaderboard,
-        'filter_type': filter_type,
-        'selected_topic': topic_id,
-        'topics': topics,
-        'user_position': user_position,
-        'total_users': total_users
-    }
-    
-    return render(request, 'quiz/leader_list.html', context)
 
 
 def _get_next_question(user, topic):
