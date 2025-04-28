@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ topic.title }} | ExamPrep{% endblock %}
+
+{% block extra_css %}
+<style>
+    .topic-header {
+        background: linear-gradient(135deg, #4285F4 0%, #1A73E8 100%);
+        padding: 40px 0;
+        color: white;
+        position: relative;
+        margin-bottom: 30px;
+    }
+    
+    .topic-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url('{% static "images/pattern.svg" %}');
+        background-size: cover;
+        opacity: 0.1;
+    }
+    
+    .topic-header-content {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .topic-title {
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+    
+    .topic-description {
+        font-size: 1.1rem;
+        max-width: 700px;
+        margin-bottom: 30px;
+        opacity: 0.9;
+    }
+    
+    .topic-stats-card {
+        border-radius: var(--border-radius-lg);
+        background-color: white;
+        box-shadow: var(--shadow);
+        margin-bottom: 30px;
+    }
+    
+    .stats-item {
+        text-align: center;
+        padding: 20px 10px;
+    }
+    
+    .stats-icon {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        color: var(--primary);
+    }
+    
+    .stats-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+        display: block;
+    }
+    
+    .stats-label {
+        display: block;
+        color: var(--gray-600);
+    }
+    
+    .progress-section {
+        margin-bottom: 30px;
+    }
+    
+    .progress-title {
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .progress-bar-container {
+        height: 30px;
+        background-color: var(--gray-200);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        margin-bottom: 15px;
+    }
+    
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(to right, #4285F4, #00D09C);
+        border-radius: var(--border-radius);
+        transition: width 1.5s ease-in-out;
+        position: relative;
+    }
+    
+    .progress-bar-fill span {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: white;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    
+    .progress-details {
+        display: flex;
+        justify-content: space-between;
+        color: var(--gray-700);
+    }
+    
+    .action-buttons {
+        margin-top: 30px;
+    }
+    
+    .action-btn {
+        min-width: 200px;
+        padding: 12px 24px;
+    }
+    
+    .questions-section {
+        margin-top: 30px;
+    }
+    
+    .section-title {
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    @media (max-width: 767.98px) {
+        .topic-header {
+            padding: 30px 0;
+        }
+        
+        .topic-title {
+            font-size: 1.8rem;
+        }
+        
+        .stats-icon {
+            font-size: 1.5rem;
+        }
+        
+        .stats-value {
+            font-size: 1.5rem;
+        }
+        
+        .action-btn {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Topic Header -->
+<header class="topic-header">
+    <div class="container topic-header-content">
+        <h1 class="topic-title">{{ topic.title }}</h1>
+        {% if topic.description %}
+            <p class="topic-description">{{ topic.description }}</p>
+        {% endif %}
+        <div class="d-flex gap-3">
+            <a href="{% url 'start_quiz' topic_id=topic.id %}" class="btn btn-light action-btn">
+                <i class="fas fa-play me-2"></i> Начать тест
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-outline-light action-btn">
+                <i class="fas fa-arrow-left me-2"></i> К списку тем
+            </a>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <!-- Stats Cards -->
+    <div class="row topic-stats-card">
+        <div class="col-md-3 col-6 stats-item">
+            <div class="stats-icon">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <span class="stats-value">{{ total_questions }}</span>
+            <span class="stats-label">Всего вопросов</span>
+        </div>
+        <div class="col-md-3 col-6 stats-item">
+            <div class="stats-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <span class="stats-value">{{ answered_questions }}</span>
+            <span class="stats-label">Ответов</span>
+        </div>
+        <div class="col-md-3 col-6 stats-item">
+            <div class="stats-icon">
+                <i class="fas fa-award"></i>
+            </div>
+            <span class="stats-value">{{ correct_answers }}</span>
+            <span class="stats-label">Правильных</span>
+        </div>
+        <div class="col-md-3 col-6 stats-item">
+            <div class="stats-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <span class="stats-value">{{ accuracy|floatformat:0 }}%</span>
+            <span class="stats-label">Точность</span>
+        </div>
+    </div>
+    
+    <!-- Progress Section -->
+    <div class="progress-section">
+        <h2 class="progress-title">Ваш прогресс</h2>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: {{ progress|floatformat:0 }}%;">
+                <span>{{ progress|floatformat:0 }}%</span>
+            </div>
+        </div>
+        <div class="progress-details">
+            <span>Отвечено: {{ answered_questions }} из {{ total_questions }} вопросов</span>
+            <span>Осталось: {{ total_questions|add:"-"|add:answered_questions }} вопросов</span>
+        </div>
+    </div>
+    
+    <div class="action-buttons text-center">
+        {% if answered_questions > 0 %}
+            <a href="{% url 'reset_quiz' topic_id=topic.id %}" class="btn btn-outline-danger me-3" onclick="return confirm('Вы уверены? Весь прогресс по этой теме будет удален.');">
+                <i class="fas fa-redo me-2"></i> Сбросить прогресс
+            </a>
+        {% endif %}
+        
+        <a href="{% url 'start_quiz' topic_id=topic.id %}" class="btn btn-primary">
+            {% if answered_questions > 0 %}
+                <i class="fas fa-play me-2"></i> Продолжить тест
+            {% else %}
+                <i class="fas fa-play me-2"></i> Начать тест
+            {% endif %}
+        </a>
+    </div>
+    
+    <!-- Tips Section -->
+    <div class="card my-4">
+        <div class="card-header bg-light">
+            <h3 class="h5 mb-0"><i class="fas fa-lightbulb me-2 text-warning"></i> Советы по прохождению</h3>
+        </div>
+        <div class="card-body">
+            <ul class="mb-0">
+                <li class="mb-2">Внимательно читайте вопрос и все варианты ответов перед тем, как сделать выбор.</li>
+                <li class="mb-2">Если вы не знаете ответ, попробуйте исключить заведомо неверные варианты.</li>
+                <li class="mb-2">Обратите внимание на объяснения к правильным ответам — они помогут вам лучше усвоить материал.</li>
+                <li class="mb-2">Регулярно повторяйте вопросы, на которые вы ответили неправильно.</li>
+                <li>Не торопитесь! Качество ответов важнее скорости прохождения теста.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Анимация прогресс-бара
+        setTimeout(function() {
+            const progressBar = document.querySelector('.progress-bar-fill');
+            progressBar.style.width = "{{ progress|floatformat:0 }}%";
+        }, 500);
+    });
+</script>
+{% endblock %}

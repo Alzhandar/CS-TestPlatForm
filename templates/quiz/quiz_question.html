@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Вопрос | {{ topic.title }} | ExamPrep{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quiz-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px 15px;
+    }
+    
+    .quiz-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .quiz-title {
+        font-weight: 600;
+        margin: 0;
+        font-size: 1.25rem;
+    }
+    
+    .quiz-progress {
+        background-color: var(--gray-200);
+        height: 10px;
+        border-radius: 50px;
+        margin-bottom: 30px;
+        overflow: hidden;
+    }
+    
+    .quiz-progress-bar {
+        height: 100%;
+        background: linear-gradient(to right, #4285F4, #4FC3F7);
+        border-radius: 50px;
+        transition: width 0.5s ease;
+    }
+    
+    .quiz-progress-text {
+        margin-top: 10px;
+        text-align: right;
+        font-size: 0.9rem;
+        color: var(--gray-600);
+    }
+    
+    .question-card {
+        border: none;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow);
+        margin-bottom: 30px;
+    }
+    
+    .question-number {
+        display: inline-block;
+        background-color: var(--primary);
+        color: white;
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 30px;
+        border-radius: 50%;
+        margin-right: 10px;
+        font-weight: 600;
+    }
+    
+    .question-text {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: var(--dark);
+    }
+    
+    .options-list {
+        list-style-type: none;
+        padding: 0;
+    }
+    
+    .option-item {
+        margin-bottom: 15px;
+    }
+    
+    .option-label {
+        display: flex;
+        padding: 15px;
+        border: 2px solid var(--gray-300);
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+    }
+    
+    .option-label:hover {
+        border-color: var(--primary);
+        background-color: rgba(66, 133, 244, 0.05);
+    }
+    
+    .option-radio {
+        margin-right: 15px;
+    }
+    
+    .option-text {
+        flex-grow: 1;
+    }
+    
+    .quiz-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+    
+    .correct-answer {
+        border-color: var(--secondary) !important;
+        background-color: rgba(52, 168, 83, 0.1) !important;
+    }
+    
+    .incorrect-answer {
+        border-color: var(--danger) !important;
+        background-color: rgba(234, 67, 53, 0.1) !important;
+    }
+    
+    #quiz-result {
+        margin-top: 20px;
+    }
+    
+    .next-button {
+        display: none; /* Будет показан через JavaScript */
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .pulse-animation {
+        animation: pulse 0.5s ease-in-out;
+    }
+    
+    @media (max-width: 767.98px) {
+        .question-text {
+            font-size: 1.1rem;
+        }
+        
+        .option-label {
+            padding: 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container quiz-container">
+    <!-- Quiz Header -->
+    <div class="quiz-header">
+        <h1 class="quiz-title">{{ topic.title }}</h1>
+        <a href="{% url 'topic_detail' topic_id=topic.id %}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-chevron-left me-1"></i> К теме
+        </a>
+    </div>
+    
+    <!-- Progress Bar -->
+    <div class="quiz-progress">
+        <div class="quiz-progress-bar" style="width: {{ progress }}%;"></div>
+    </div>
+    <div class="quiz-progress-text">
+        {{ answered_questions }} из {{ total_questions }} вопросов ({{ progress }}%)
+    </div>
+    
+    <!-- Question Card -->
+    <div class="question-card">
+        <div class="card-body p-4">
+            <p class="question-text">
+                <span class="question-number">{{ answered_questions|add:1 }}</span>
+                {{ question.text }}
+            </p>
+            
+            <form method="post" class="quiz-form" id="quiz-form">
+                {% csrf_token %}
+                
+                <ul class="options-list">
+                    <li class="option-item">
+                        <label class="option-label" for="id_selected_option_0">
+                            <input type="radio" name="selected_option" value="1" id="id_selected_option_0" class="option-radio"
+                                   {% if previous_answer == 1 %}checked{% endif %}>
+                            <span class="option-text">{{ question.option1 }}</span>
+                        </label>
+                    </li>
+                    <li class="option-item">
+                        <label class="option-label" for="id_selected_option_1">
+                            <input type="radio" name="selected_option" value="2" id="id_selected_option_1" class="option-radio"
+                                   {% if previous_answer == 2 %}checked{% endif %}>
+                            <span class="option-text">{{ question.option2 }}</span>
+                        </label>
+                    </li>
+                    <li class="option-item">
+                        <label class="option-label" for="id_selected_option_2">
+                            <input type="radio" name="selected_option" value="3" id="id_selected_option_2" class="option-radio"
+                                   {% if previous_answer == 3 %}checked{% endif %}>
+                            <span class="option-text">{{ question.option3 }}</span>
+                        </label>
+                    </li>
+                    <li class="option-item">
+                        <label class="option-label" for="id_selected_option_3">
+                            <input type="radio" name="selected_option" value="4" id="id_selected_option_3" class="option-radio"
+                                   {% if previous_answer == 4 %}checked{% endif %}>
+                            <span class="option-text">{{ question.option4 }}</span>
+                        </label>
+                    </li>
+                </ul>
+                
+                <div class="quiz-actions">
+                    <a href="{% url 'topic_detail' topic_id=topic.id %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i> Прервать тест
+                    </a>
+                    
+                    <button type="submit" class="btn btn-primary" id="submit-answer">
+                        <i class="fas fa-check me-2"></i> Ответить
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Result will be shown here -->
+            <div id="quiz-result"></div>
+            
+            <!-- Next Question Button (hidden by default) -->
+            <div class="text-center mt-3">
+                <a href="#" class="btn btn-success btn-lg next-button" id="next-question">
+                    <i class="fas fa-arrow-right me-2"></i> Следующий вопрос
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const quizForm = document.getElementById('quiz-form');
+        const submitButton = document.getElementById('submit-answer');
+        const resultContainer = document.getElementById('quiz-result');
+        const nextButton = document.getElementById('next-question');
+        const radioInputs = document.querySelectorAll('input[type="radio"]');
+        
+        // Включаем кнопку "Ответить" только если выбран вариант
+        function checkFormValidity() {
+            const isChecked = Array.from(radioInputs).some(input => input.checked);
+            submitButton.disabled = !isChecked;
+        }
+        
+        // Проверяем валидность формы при загрузке и при изменении выбора
+        checkFormValidity();
+        radioInputs.forEach(input => {
+            input.addEventListener('change', checkFormValidity);
+        });
+        
+        // AJAX отправка формы
+        quizForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Блокируем кнопку во время обработки
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Проверка...';
+            
+            // Собираем данные формы
+            const formData = new FormData(quizForm);
+            
+            // Отправляем AJAX запрос
+            fetch(quizForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Ошибка сети');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Обрабатываем полученные данные
+                handleResponse(data);
+            })
+            .catch(error => {
+                console.error('Произошла ошибка:', error);
+                resultContainer.innerHTML = `
+                    <div class="alert alert-danger mt-3">
+                        Произошла ошибка при отправке ответа. Пожалуйста, попробуйте еще раз.
+                    </div>
+                `;
+                
+                // Восстанавливаем кнопку
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-check me-2"></i> Ответить';
+            });
+        });
+        
+        // Обработка ответа от сервера
+        function handleResponse(data) {
+            // Блокируем изменение выбора ответа
+            radioInputs.forEach(input => {
+                input.disabled = true;
+            });
+            
+            // Скрываем кнопку ответа
+            submitButton.style.display = 'none';
+            
+            // Отображаем результат
+            resultContainer.innerHTML = `
+                <div class="alert alert-${data.is_correct ? 'success' : 'danger'} mt-3 fade show">
+                    <div class="d-flex">
+                        <div class="fs-3 me-3">
+                            <i class="fas fa-${data.is_correct ? 'check-circle' : 'times-circle'}"></i>
+                        </div>
+                        <div>
+                            <h5>${data.is_correct ? 'Правильно!' : 'Неправильно!'}</h5>
+                            ${data.explanation ? `<p class="mb-0">${data.explanation}</p>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Добавляем анимацию для привлечения внимания
+            resultContainer.querySelector('.alert').classList.add('pulse-animation');
+            
+            // Подсвечиваем правильный и неправильный ответы
+            radioInputs.forEach(input => {
+                const optionNumber = parseInt(input.value);
+                const label = input.closest('.option-label');
+                
+                if (optionNumber === data.correct_option) {
+                    // Правильный ответ
+                    label.classList.add('correct-answer');
+                } else if (input.checked && optionNumber !== data.correct_option) {
+                    // Неправильный выбранный ответ
+                    label.classList.add('incorrect-answer');
+                }
+            });
+            
+            // Показываем кнопку "Следующий вопрос"
+            if (data.next_url) {
+                nextButton.href = data.next_url;
+                nextButton.style.display = 'inline-flex';
+            } else {
+                // Если нет следующего вопроса, показываем кнопку "Завершить"
+                nextButton.href = "{% url 'topic_detail' topic_id=topic.id %}";
+                nextButton.innerHTML = '<i class="fas fa-flag-checkered me-2"></i> Завершить тест';
+                nextButton.style.display = 'inline-flex';
+            }
+        }
+    });
+</script>
+{% endblock %}

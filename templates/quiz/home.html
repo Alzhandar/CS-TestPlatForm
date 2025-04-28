@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Главная | ExamPrep{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #4285F4 0%, #1A73E8 100%);
+        padding: 60px 0;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 40px;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url('{% static "images/pattern.svg" %}');
+        background-size: cover;
+        opacity: 0.1;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .hero-title {
+        font-weight: 700;
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+    }
+    
+    .hero-text {
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin-bottom: 30px;
+        opacity: 0.9;
+    }
+    
+    .topics-container {
+        margin-bottom: 60px;
+    }
+    
+    .topics-title {
+        font-weight: 600;
+        margin-bottom: 30px;
+        position: relative;
+        display: inline-block;
+        padding-bottom: 10px;
+    }
+    
+    .topics-title::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 3px;
+        width: 60px;
+        background-color: var(--primary);
+    }
+    
+    .topic-card {
+        height: 100%;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+    
+    .topic-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .topic-card-img {
+        height: 180px;
+        object-fit: cover;
+    }
+    
+    .topic-card .card-body {
+        padding: 20px;
+    }
+    
+    .topic-card .card-title {
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+    
+    .topic-progress {
+        height: 6px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .topic-questions {
+        color: var(--gray-600);
+        font-size: 0.9rem;
+    }
+    
+    .topic-stats {
+        display: flex;
+        justify-content: space-between;
+        color: var(--gray-700);
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 0;
+    }
+    
+    .empty-state-icon {
+        font-size: 3.5rem;
+        color: var(--gray-300);
+        margin-bottom: 20px;
+    }
+    
+    .animate-on-scroll {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    
+    .animated {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    @media (max-width: 767.98px) {
+        .hero-section {
+            padding: 40px 0;
+        }
+        
+        .hero-title {
+            font-size: 2rem;
+        }
+        
+        .topic-card-img {
+            height: 150px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container hero-content">
+        <div class="row">
+            <div class="col-lg-8">
+                <h1 class="hero-title">Подготовка к экзаменам стала проще</h1>
+                <p class="hero-text">Тренируйтесь, проходите тесты и улучшайте свои знания с помощью нашей платформы. Выберите интересующую тему и начните прямо сейчас!</p>
+                <a href="#topics" class="btn btn-light btn-lg px-4">
+                    <i class="fas fa-book-open me-2"></i> Начать обучение
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Topics Section -->
+<section id="topics" class="topics-container">
+    <div class="container">
+        <h2 class="topics-title">Доступные темы</h2>
+        
+        {% if topics %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for topic in topics %}
+                    <div class="col animate-on-scroll" style="transition-delay: {{ forloop.counter0|divisibleby:3 }}00ms">
+                        <div class="card topic-card">
+                            {% if topic.image %}
+                                <img src="{{ topic.image.url }}" alt="{{ topic.title }}" class="card-img-top topic-card-img">
+                            {% else %}
+                                <div class="card-img-top topic-card-img d-flex justify-content-center align-items-center bg-light">
+                                    <i class="fas fa-book fa-3x text-muted"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="card-body">
+                                <h3 class="card-title">{{ topic.title }}</h3>
+                                
+                                <div class="progress topic-progress">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ topic.progress|floatformat:0 }}%;" 
+                                         aria-valuenow="{{ topic.progress|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                
+                                <div class="topic-stats">
+                                    <span class="topic-questions">
+                                        <i class="fas fa-question-circle me-1"></i> {{ topic.questions_count }} вопросов
+                                    </span>
+                                    <span class="topic-progress-text">
+                                        {{ topic.progress|floatformat:0 }}% завершено
+                                    </span>
+                                </div>
+                                
+                                <p class="card-text mb-3">
+                                    {% if topic.description %}
+                                        {{ topic.description|truncatechars:100 }}
+                                    {% else %}
+                                        Тест по теме "{{ topic.title }}" поможет вам проверить и закрепить свои знания.
+                                    {% endif %}
+                                </p>
+                                
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'topic_detail' topic_id=topic.id %}" class="btn btn-outline-primary flex-grow-1">
+                                        <i class="fas fa-info-circle me-2"></i> Подробнее
+                                    </a>
+                                    <a href="{% url 'start_quiz' topic_id=topic.id %}" class="btn btn-primary flex-grow-1">
+                                        <i class="fas fa-play me-2"></i> Начать
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <h3>Пока нет доступных тем</h3>
+                <p class="text-muted">Скоро здесь появятся темы для тестирования</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-4 mb-4 mb-md-0">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body py-4">
+                        <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                        <h3 class="h4 mb-2">1000+</h3>
+                        <p class="text-muted mb-0">Студентов</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4 mb-md-0">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body py-4">
+                        <i class="fas fa-book fa-3x text-primary mb-3"></i>
+                        <h3 class="h4 mb-2">50+</h3>
+                        <p class="text-muted mb-0">Тем для тестирования</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body py-4">
+                        <i class="fas fa-question-circle fa-3x text-primary mb-3"></i>
+                        <h3 class="h4 mb-2">1000+</h3>
+                        <p class="text-muted mb-0">Тестовых вопросов</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Анимация появления элементов при прокрутке
+        const animatedElements = document.querySelectorAll('.animate-on-scroll');
+        
+        const animateOnScroll = () => {
+            animatedElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                
+                if (elementTop < windowHeight - 50) {
+                    element.classList.add('animated');
+                }
+            });
+        };
+        
+        // Запускаем при загрузке и при прокрутке
+        animateOnScroll();
+        window.addEventListener('scroll', animateOnScroll);
+    });
+</script>
+{% endblock %}

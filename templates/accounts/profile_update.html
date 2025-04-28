@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Редактирование профиля | ExamPrep{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-edit-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 30px 15px;
+    }
+    
+    .profile-edit-header {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .profile-edit-title {
+        position: relative;
+        display: inline-block;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+    
+    .profile-edit-title::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        transform: translateX(-50%);
+        height: 3px;
+        width: 60px;
+        background-color: var(--primary);
+    }
+    
+    .profile-edit-card {
+        background-color: white;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow);
+        padding: 30px;
+    }
+    
+    .avatar-section {
+        display: flex;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .current-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-light);
+        margin-bottom: 15px;
+    }
+    
+    .avatar-upload-btn {
+        margin-top: 10px;
+    }
+    
+    .preview-avatar {
+        display: none;
+        max-width: 200px;
+        max-height: 200px;
+        margin-top: 10px;
+        border-radius: 50%;
+    }
+    
+    .form-section {
+        margin-top: 30px;
+        padding-top: 30px;
+        border-top: 1px solid var(--gray-200);
+    }
+    
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+    
+    .form-control, .form-select {
+        padding: 0.75rem 1rem;
+    }
+    
+    .bio-help {
+        display: block;
+        margin-top: 6px;
+        font-size: 0.85rem;
+        color: var(--gray-600);
+    }
+    
+    .actions-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 40px;
+    }
+    
+    @media (max-width: 767.98px) {
+        .profile-edit-card {
+            padding: 20px;
+        }
+        
+        .actions-section {
+            flex-direction: column-reverse;
+            gap: 15px;
+        }
+        
+        .actions-section .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-edit-container">
+    <div class="profile-edit-header">
+        <h1 class="profile-edit-title">Редактирование профиля</h1>
+        <p class="text-muted">Обновите свой профиль, чтобы персонализировать ваш опыт</p>
+    </div>
+    
+    <div class="profile-edit-card">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Avatar Section -->
+            <div class="avatar-section">
+                <img src="{{ user.profile.avatar.url }}" alt="{{ user.get_full_name }}" class="current-avatar" id="currentAvatar">
+                <p class="text-muted mb-2">Загрузите изображение профиля (рекомендуется квадратное)</p>
+                
+                <div class="mb-3">
+                    <label for="{{ profile_form.avatar.id_for_label }}" class="visually-hidden">Аватар</label>
+                    {{ profile_form.avatar }}
+                    {% if profile_form.avatar.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in profile_form.avatar.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Предпросмотр аватара -->
+                <img src="" alt="Предпросмотр аватара" class="preview-avatar" id="avatarPreview">
+            </div>
+            
+            <!-- Personal Information Section -->
+            <div class="form-section">
+                <h2 class="h5 mb-3">Личная информация</h2>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ user_form.first_name.id_for_label }}" class="form-label">Имя</label>
+                        {{ user_form.first_name }}
+                        {% if user_form.first_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in user_form.first_name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ user_form.last_name.id_for_label }}" class="form-label">Фамилия</label>
+                        {{ user_form.last_name }}
+                        {% if user_form.last_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in user_form.last_name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ user_form.email.id_for_label }}" class="form-label">Email</label>
+                    {{ user_form.email }}
+                    {% if user_form.email.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in user_form.email.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Bio Section -->
+            <div class="form-section">
+                <h2 class="h5 mb-3">О себе</h2>
+                
+                <div class="mb-3">
+                    <label for="{{ profile_form.bio.id_for_label }}" class="form-label">Биография</label>
+                    {{ profile_form.bio }}
+                    <span class="bio-help">Расскажите немного о себе, своих интересах или целях обучения</span>
+                    {% if profile_form.bio.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in profile_form.bio.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="actions-section">
+                <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i> Отмена
+                </a>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i> Сохранить изменения
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Предпросмотр аватара при выборе файла
+        const avatarInput = document.getElementById('{{ profile_form.avatar.id_for_label }}');
+        const avatarPreview = document.getElementById('avatarPreview');
+        
+        if(avatarInput) {
+            avatarInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    
+                    reader.addEventListener('load', function() {
+                        avatarPreview.setAttribute('src', this.result);
+                        avatarPreview.style.display = 'block';
+                    });
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

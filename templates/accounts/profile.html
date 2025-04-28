@@ -1,0 +1,486 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Профиль | ExamPrep{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 30px 15px;
+    }
+    
+    .profile-header {
+        background: linear-gradient(135deg, #4285F4 0%, #1A73E8 100%);
+        color: white;
+        border-radius: var(--border-radius-lg);
+        padding: 30px;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+    
+    .profile-header::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url('{% static "images/pattern_dots.svg" %}');
+        background-size: cover;
+        opacity: 0.1;
+    }
+    
+    .profile-header-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 30px;
+    }
+    
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    .profile-info {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .profile-name {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    .profile-bio {
+        font-size: 1rem;
+        margin-bottom: 15px;
+        opacity: 0.9;
+    }
+    
+    .profile-stats {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .profile-stat-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .profile-stat-icon {
+        font-size: 1.2rem;
+    }
+    
+    .profile-actions {
+        margin-left: auto;
+        align-self: flex-start;
+    }
+    
+    .nav-tabs {
+        margin-bottom: 20px;
+        border-bottom: 2px solid var(--gray-200);
+    }
+    
+    .nav-tabs .nav-link {
+        border: none;
+        color: var(--gray-700);
+        font-weight: 500;
+        padding: 12px 20px;
+        margin-right: 10px;
+        border-radius: 0;
+        transition: all 0.2s;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        background-color: rgba(66, 133, 244, 0.05);
+        color: var(--primary);
+        border-bottom: 2px solid var(--primary-light);
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: var(--primary);
+        background-color: transparent;
+        border-bottom: 2px solid var(--primary);
+    }
+    
+    .tab-content {
+        margin-top: 20px;
+    }
+    
+    .stats-card {
+        background-color: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .topic-stats-item {
+        padding: 15px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .topic-stats-item:last-child {
+        border-bottom: none;
+    }
+    
+    .topic-stats-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .topic-stats-title {
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .topic-progress {
+        height: 8px;
+        border-radius: 4px;
+        background-color: var(--gray-200);
+        margin-bottom: 10px;
+    }
+    
+    .topic-progress-bar {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 1s ease;
+    }
+    
+    .topic-stats-details {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: var(--gray-600);
+    }
+    
+    .wrong-answers-list {
+        list-style-type: none;
+        padding: 0;
+    }
+    
+    .wrong-answer-item {
+        background-color: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-sm);
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .wrong-answer-topic {
+        color: var(--gray-600);
+        font-size: 0.85rem;
+        display: block;
+        margin-bottom: 5px;
+    }
+    
+    .wrong-answer-question {
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+    
+    .wrong-answer-options {
+        background-color: var(--gray-100);
+        padding: 10px 15px;
+        border-radius: var(--border-radius-sm);
+        font-size: 0.9rem;
+    }
+    
+    .wrong-option {
+        color: var(--danger);
+        text-decoration: line-through;
+    }
+    
+    .correct-option {
+        color: var(--secondary);
+        font-weight: 500;
+    }
+    
+    .achievement-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+    }
+    
+    .achievement-card {
+        background-color: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .achievement-icon {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        color: var(--primary);
+    }
+    
+    .achievement-locked {
+        opacity: 0.5;
+    }
+    
+    @media (max-width: 767.98px) {
+        .profile-header {
+            padding: 20px;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+        }
+        
+        .profile-name {
+            font-size: 1.5rem;
+        }
+        
+        .profile-actions {
+            margin-left: 0;
+            margin-top: 15px;
+            align-self: center;
+            width: 100%;
+        }
+        
+        .profile-actions .btn {
+            width: 100%;
+        }
+        
+        .nav-tabs .nav-link {
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-header-content">
+            <img src="{{ user.profile.avatar.url }}" alt="{{ user.get_full_name }}" class="profile-avatar">
+            
+            <div class="profile-info">
+                <h1 class="profile-name">{{ user.get_full_name }}</h1>
+                {% if user.profile.bio %}
+                    <p class="profile-bio">{{ user.profile.bio }}</p>
+                {% endif %}
+                
+                <div class="profile-stats">
+                    <div class="profile-stat-item">
+                        <i class="fas fa-question-circle profile-stat-icon"></i>
+                        <span>{{ user.profile.get_total_questions_answered }} ответов</span>
+                    </div>
+                    <div class="profile-stat-item">
+                        <i class="fas fa-check-circle profile-stat-icon"></i>
+                        <span>{{ user.profile.get_correct_answers_count }} правильных</span>
+                    </div>
+                    <div class="profile-stat-item">
+                        <i class="fas fa-percentage profile-stat-icon"></i>
+                        <span>{{ user.profile.get_success_rate|floatformat:1 }}% успеха</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-actions">
+                <a href="{% url 'profile_update' %}" class="btn btn-light">
+                    <i class="fas fa-edit me-2"></i> Редактировать профиль
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Profile Tabs -->
+    <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="statistics-tab" data-bs-toggle="tab" data-bs-target="#statistics" type="button" role="tab">
+                <i class="fas fa-chart-bar me-2"></i> Статистика
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="wrong-answers-tab" data-bs-toggle="tab" data-bs-target="#wrong-answers" type="button" role="tab">
+                <i class="fas fa-times-circle me-2"></i> Ошибки
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="achievements-tab" data-bs-toggle="tab" data-bs-target="#achievements" type="button" role="tab">
+                <i class="fas fa-trophy me-2"></i> Достижения
+            </button>
+        </li>
+    </ul>
+    
+    <!-- Tab Content -->
+    <div class="tab-content" id="profileTabsContent">
+        <!-- Statistics Tab -->
+        <div class="tab-pane fade show active" id="statistics" role="tabpanel" aria-labelledby="statistics-tab">
+            <h2 class="h4 mb-4">Статистика по темам</h2>
+            
+            {% if topic_stats %}
+                <div class="stats-card">
+                    {% for topic_name, stats in topic_stats.items %}
+                        <div class="topic-stats-item">
+                            <div class="topic-stats-header">
+                                <h3 class="topic-stats-title">{{ topic_name }}</h3>
+                                <div>
+                                    <span class="badge bg-success">{{ stats.correct }} правильных</span>
+                                    <span class="badge bg-danger">{{ stats.incorrect }} ошибок</span>
+                                </div>
+                            </div>
+                            
+                            <div class="topic-progress">
+                                <div class="topic-progress-bar bg-primary" style="width: {{ stats.percentage }}%;"></div>
+                            </div>
+                            
+                            <div class="topic-stats-details">
+                                <span>Всего ответов: {{ stats.total }}</span>
+                                <span>Процент успеха: {{ stats.percentage|floatformat:1 }}%</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> Вы еще не проходили тесты. Начните с <a href="{% url 'home' %}" class="alert-link">главной страницы</a>.
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Wrong Answers Tab -->
+        <div class="tab-pane fade" id="wrong-answers" role="tabpanel" aria-labelledby="wrong-answers-tab">
+            <h2 class="h4 mb-4">Вопросы с ошибками</h2>
+            
+            {% if wrong_answers %}
+                <ul class="wrong-answers-list">
+                    {% for answer in wrong_answers %}
+                        <li class="wrong-answer-item">
+                            <span class="wrong-answer-topic">
+                                <i class="fas fa-book me-1"></i> {{ answer.question.topic.title }}
+                            </span>
+                            <p class="wrong-answer-question">{{ answer.question.text }}</p>
+                            <div class="wrong-answer-options">
+                                {% if answer.selected_option == 1 %}
+                                    <p class="wrong-option">Ваш ответ: {{ answer.question.option1 }}</p>
+                                {% elif answer.selected_option == 2 %}
+                                    <p class="wrong-option">Ваш ответ: {{ answer.question.option2 }}</p>
+                                {% elif answer.selected_option == 3 %}
+                                    <p class="wrong-option">Ваш ответ: {{ answer.question.option3 }}</p>
+                                {% elif answer.selected_option == 4 %}
+                                    <p class="wrong-option">Ваш ответ: {{ answer.question.option4 }}</p>
+                                {% endif %}
+                                
+                                <p class="correct-option">Правильный ответ: {{ answer.question.get_correct_option_text }}</p>
+                                
+                                {% if answer.question.explanation %}
+                                    <div class="mt-2 pt-2 border-top">
+                                        <strong>Объяснение:</strong> {{ answer.question.explanation }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i> У вас пока нет неправильных ответов. Отличная работа!
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Achievements Tab -->
+        <div class="tab-pane fade" id="achievements" role="tabpanel" aria-labelledby="achievements-tab">
+            <h2 class="h4 mb-4">Ваши достижения</h2>
+            
+            <div class="achievement-cards">
+                <!-- Динамически создаем достижения на основе статистики пользователя -->
+                {% with total_answers=user.profile.get_total_questions_answered correct_answers=user.profile.get_correct_answers_count %}
+                
+                <!-- Достижение: Первые шаги -->
+                <div class="achievement-card {% if total_answers < 10 %}achievement-locked{% endif %}">
+                    <div class="achievement-icon">
+                        {% if total_answers >= 10 %}
+                            <i class="fas fa-shoe-prints text-success"></i>
+                        {% else %}
+                            <i class="fas fa-lock"></i>
+                        {% endif %}
+                    </div>
+                    <h3 class="h5">Первые шаги</h3>
+                    <p class="text-muted mb-0">Ответить на 10 вопросов</p>
+                    <div class="progress mt-2" style="height: 10px;">
+                        <div class="progress-bar" style="width: {{ total_answers|default:0|min_value:10|div:10|mul:100 }}%;"></div>
+                    </div>
+                    <small class="text-muted">{{ total_answers|default:0 }}/10</small>
+                </div>
+                
+                <!-- Достижение: Знаток -->
+                <div class="achievement-card {% if total_answers < 50 %}achievement-locked{% endif %}">
+                    <div class="achievement-icon">
+                        {% if total_answers >= 50 %}
+                            <i class="fas fa-graduation-cap text-primary"></i>
+                        {% else %}
+                            <i class="fas fa-lock"></i>
+                        {% endif %}
+                    </div>
+                    <h3 class="h5">Знаток</h3>
+                    <p class="text-muted mb-0">Ответить на 50 вопросов</p>
+                    <div class="progress mt-2" style="height: 10px;">
+                        <div class="progress-bar" style="width: {{ total_answers|default:0|min_value:50|div:50|mul:100 }}%;"></div>
+                    </div>
+                    <small class="text-muted">{{ total_answers|default:0 }}/50</small>
+                </div>
+                
+                <!-- Достижение: Мастер -->
+                <div class="achievement-card {% if total_answers < 100 %}achievement-locked{% endif %}">
+                    <div class="achievement-icon">
+                        {% if total_answers >= 100 %}
+                            <i class="fas fa-crown text-warning"></i>
+                        {% else %}
+                            <i class="fas fa-lock"></i>
+                        {% endif %}
+                    </div>
+                    <h3 class="h5">Мастер</h3>
+                    <p class="text-muted mb-0">Ответить на 100 вопросов</p>
+                    <div class="progress mt-2" style="height: 10px;">
+                        <div class="progress-bar" style="width: {{ total_answers|default:0|min_value:100|div:100|mul:100 }}%;"></div>
+                    </div>
+                    <small class="text-muted">{{ total_answers|default:0 }}/100</small>
+                </div>
+                
+                <!-- Достижение: Точность -->
+                <div class="achievement-card {% if correct_answers < 25 %}achievement-locked{% endif %}">
+                    <div class="achievement-icon">
+                        {% if correct_answers >= 25 %}
+                            <i class="fas fa-bullseye text-danger"></i>
+                        {% else %}
+                            <i class="fas fa-lock"></i>
+                        {% endif %}
+                    </div>
+                    <h3 class="h5">Точность</h3>
+                    <p class="text-muted mb-0">Дать 25 правильных ответов</p>
+                    <div class="progress mt-2" style="height: 10px;">
+                        <div class="progress-bar" style="width: {{ correct_answers|default:0|min_value:25|div:25|mul:100 }}%;"></div>
+                    </div>
+                    <small class="text-muted">{{ correct_answers|default:0 }}/25</small>
+                </div>
+                
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

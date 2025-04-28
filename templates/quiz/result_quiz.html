@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Результаты | {{ topic.title }} | ExamPrep{% endblock %}
+
+{% block extra_css %}
+<style>
+    .results-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 30px 15px;
+    }
+    
+    .results-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .results-title {
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+    
+    .results-subtitle {
+        color: var(--gray-600);
+    }
+    
+    .results-card {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+    
+    .results-summary {
+        background: linear-gradient(135deg, #4285F4 0%, #1A73E8 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+        position: relative;
+    }
+    
+    .results-summary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url('{% static "images/pattern_dots.svg" %}');
+        background-size: cover;
+        opacity: 0.1;
+    }
+    
+    .results-summary-content {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .results-score {
+        font-size: 4rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        line-height: 1;
+    }
+    
+    .results-message {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+    }
+    
+    .results-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-item {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: var(--border-radius);
+        padding: 15px 10px;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .results-details {
+        padding: 30px;
+    }
+    
+    .results-details-title {
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .answer-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .answer-item {
+        padding: 15px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .answer-item:last-child {
+        border-bottom: none;
+    }
+    
+    .answer-question {
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+    
+    .answer-status {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: var(--border-radius-sm);
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+    
+    .answer-status.correct {
+        background-color: rgba(52, 168, 83, 0.15);
+        color: var(--secondary);
+    }
+    
+    .answer-status.incorrect {
+        background-color: rgba(234, 67, 53, 0.15);
+        color: var(--danger);
+    }
+    
+    .answer-details {
+        font-size: 0.9rem;
+        color: var(--gray-700);
+        background-color: var(--gray-100);
+        padding: 10px;
+        border-radius: var(--border-radius-sm);
+    }
+    
+    .share-section {
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    .share-title {
+        margin-bottom: 15px;
+        font-weight: 500;
+    }
+    
+    .share-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .share-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        transition: transform 0.2s;
+    }
+    
+    .share-button:hover {
+        transform: translateY(-3px);
+    }
+    
+    .share-facebook {
+        background-color: #3b5998;
+    }
+    
+    .share-twitter {
+        background-color: #1da1f2;
+    }
+    
+    .share-telegram {
+        background-color: #0088cc;
+    }
+    
+    .share-vk {
+        background-color: #4a76a8;
+    }
+    
+    .certificate-section {
+        text-align: center;
+        margin-top: 30px;
+    }
+    
+    .certificate-image {
+        max-width: 200px;
+        margin-bottom: 15px;
+    }
+    
+    @media (max-width: 767.98px) {
+        .results-stats {
+            grid-template-columns: repeat(1, 1fr);
+            gap: 10px;
+        }
+        
+        .results-score {
+            font-size: 3rem;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+        }
+    }
+    
+    /* Анимации */
+    @keyframes scaleIn {
+        from {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    
+    .animate-scale-in {
+        animation: scaleIn 0.5s ease-out forwards;
+    }
+    
+    .delay-1 {
+        animation-delay: 0.1s;
+    }
+    
+    .delay-2 {
+        animation-delay: 0.2s;
+    }
+    
+    .delay-3 {
+        animation-delay: 0.3s;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <div class="results-header">
+        <h1 class="results-title">Результаты теста</h1>
+        <p class="results-subtitle">{{ topic.title }}</p>
+    </div>
+    
+    <div class="results-card">
+        <!-- Results Summary -->
+        <div class="results-summary">
+            <div class="results-summary-content">
+                <div class="results-score animate-scale-in">{{ percentage_score }}%</div>
+                
+                {% if percentage_score >= 90 %}
+                    <div class="results-message">Отличный результат! Вы настоящий эксперт!</div>
+                {% elif percentage_score >= 75 %}
+                    <div class="results-message">Хороший результат! Вы хорошо разбираетесь в теме!</div>
+                {% elif percentage_score >= 50 %}
+                    <div class="results-message">Неплохо! Есть над чем поработать.</div>
+                {% else %}
+                    <div class="results-message">Это только начало. Продолжайте учиться!</div>
+                {% endif %}
+                
+                <div class="results-stats">
+                    <div class="stat-item animate-scale-in delay-1">
+                        <div class="stat-value">{{ total_questions }}</div>
+                        <div class="stat-label">Всего вопросов</div>
+                    </div>
+                    <div class="stat-item animate-scale-in delay-2">
+                        <div class="stat-value">{{ correct_answers }}</div>
+                        <div class="stat-label">Правильных</div>
+                    </div>
+                    <div class="stat-item animate-scale-in delay-3">
+                        <div class="stat-value">{{ incorrect_answers }}</div>
+                        <div class="stat-label">Неправильных</div>
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{% url 'topic_detail' topic_id=topic.id %}" class="btn btn-light">
+                        <i class="fas fa-chart-bar me-2"></i> Статистика темы
+                    </a>
+                    <a href="{% url 'start_quiz' topic_id=topic.id %}" class="btn btn-light">
+                        <i class="fas fa-redo me-2"></i> Пройти снова
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Details -->
+        <div class="results-details">
+            <h2 class="results-details-title">Детали ответов</h2>
+            
+            <ul class="answer-list">
+                {% for answer in user_answers %}
+                    <li class="answer-item">
+                        <p class="answer-question">{{ forloop.counter }}. {{ answer.question.text }}</p>
+                        
+                        {% if answer.is_correct %}
+                            <span class="answer-status correct">
+                                <i class="fas fa-check-circle me-1"></i> Правильно
+                            </span>
+                        {% else %}
+                            <span class="answer-status incorrect">
+                                <i class="fas fa-times-circle me-1"></i> Неправильно
+                            </span>
+                        {% endif %}
+                        
+                        <div class="answer-details">
+                            {% if answer.selected_option == 1 %}
+                                <p>Ваш ответ: {{ answer.question.option1 }}</p>
+                            {% elif answer.selected_option == 2 %}
+                                <p>Ваш ответ: {{ answer.question.option2 }}</p>
+                            {% elif answer.selected_option == 3 %}
+                                <p>Ваш ответ: {{ answer.question.option3 }}</p>
+                            {% elif answer.selected_option == 4 %}
+                                <p>Ваш ответ: {{ answer.question.option4 }}</p>
+                            {% endif %}
+                            
+                            {% if not answer.is_correct %}
+                                <p>Правильный ответ: {{ answer.question.get_correct_option_text }}</p>
+                            {% endif %}
+                            
+                            {% if answer.question.explanation %}
+                                <div class="mt-2 pt-2 border-top">
+                                    <strong>Объяснение:</strong> {{ answer.question.explanation }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    
+    {% if percentage_score >= 70 %}
+        <!-- Certificate Section (Only for high scores) -->
+        <div class="certificate-section">
+            <img src="{% static 'images/certificate.svg' %}" alt="Certificate" class="certificate-image">
+            <h3>Поздравляем с успешным прохождением!</h3>
+            <p>Вы успешно освоили тему "{{ topic.title }}" с результатом {{ percentage_score }}%</p>
+            <a href="#" class="btn btn-primary">
+                <i class="fas fa-download me-2"></i> Скачать сертификат
+            </a>
+        </div>
+    {% endif %}
+    
+    <!-- Share Section -->
+    <div class="share-section">
+        <h3 class="share-title">Поделитесь своим результатом</h3>
+        <div class="share-buttons">
+            <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank" class="share-button share-facebook">
+                <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="https://twitter.com/intent/tweet?text=Я прошел тест «{{ topic.title }}» с результатом {{ percentage_score }}%!&url={{ request.build_absolute_uri }}" target="_blank" class="share-button share-twitter">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <a href="https://t.me/share/url?url={{ request.build_absolute_uri }}&text=Я прошел тест «{{ topic.title }}» с результатом {{ percentage_score }}%!" target="_blank" class="share-button share-telegram">
+                <i class="fab fa-telegram-plane"></i>
+            </a>
+            <a href="https://vk.com/share.php?url={{ request.build_absolute_uri }}&title=Мой результат теста «{{ topic.title }}»" target="_blank" class="share-button share-vk">
+                <i class="fab fa-vk"></i>
+            </a>
+        </div>
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-body">
+            <h4 class="card-title">
+                <i class="fas fa-lightbulb text-warning me-2"></i> Рекомендации
+            </h4>
+            <ul class="mb-0">
+                {% if percentage_score < 50 %}
+                    <li>Рекомендуем изучить материалы по этой теме более внимательно.</li>
+                    <li>Сконцентрируйтесь на вопросах, на которые вы ответили неправильно.</li>
+                    <li>Попробуйте пройти тест снова после повторного изучения материала.</li>
+                {% elif percentage_score < 80 %}
+                    <li>Хороший результат! Просмотрите вопросы с неправильными ответами.</li>
+                    <li>Изучите дополнительные материалы по моментам, которые вызвали затруднения.</li>
+                    <li>Попробуйте пройти тест еще раз для лучшего закрепления.</li>
+                {% else %}
+                    <li>Отличный результат! Вы хорошо знаете эту тему.</li>
+                    <li>Рассмотрите возможность изучения более сложных материалов по этой теме.</li>
+                    <li>Переходите к следующей теме для расширения знаний.</li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+    
+    {% if related_topics %}
+        <div class="card mt-4">
+            <div class="card-body">
+                <h4 class="card-title">
+                    <i class="fas fa-book me-2"></i> Похожие темы
+                </h4>
+                <div class="list-group">
+                    {% for related_topic in related_topics %}
+                        <a href="{% url 'topic_detail' topic_id=related_topic.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            {{ related_topic.title }}
+                            <span class="badge bg-primary rounded-pill">{{ related_topic.questions_count }} вопросов</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            const scoreElement = document.querySelector('.results-score');
+            scoreElement.textContent = '{{ percentage_score }}%';
+        }, 500);
+    });
+</script>
+{% endblock %}
