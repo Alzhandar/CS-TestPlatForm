@@ -7,6 +7,7 @@ from django.urls import reverse_lazy
 from django.db.models import Count, Q
 from django.contrib import messages
 import random
+from django.urls import reverse, reverse_lazy
 
 from .models import Topic, Question, UserAnswer
 from .forms import UserAnswerForm
@@ -121,7 +122,8 @@ def quiz_question(request, topic_id, question_id):
             
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 next_question = _get_next_question(request.user, topic)
-                next_url = reverse_lazy('quiz_question', kwargs={
+                # Заменить reverse_lazy на str(reverse())
+                next_url = reverse('quiz_question', kwargs={
                     'topic_id': topic.id, 
                     'question_id': next_question.id
                 }) if next_question else None
@@ -133,6 +135,7 @@ def quiz_question(request, topic_id, question_id):
                     'explanation': question.explanation,
                     'next_url': next_url
                 })
+            
             
             next_question = _get_next_question(request.user, topic)
             

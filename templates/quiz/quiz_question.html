@@ -222,10 +222,8 @@
                 </div>
             </form>
             
-            <!-- Result will be shown here -->
             <div id="quiz-result"></div>
             
-            <!-- Next Question Button (hidden by default) -->
             <div class="text-center mt-3">
                 <a href="#" class="btn btn-success btn-lg next-button" id="next-question">
                     <i class="fas fa-arrow-right me-2"></i> Следующий вопрос
@@ -344,14 +342,26 @@
             
             // Показываем кнопку "Следующий вопрос"
             if (data.next_url) {
-                nextButton.href = data.next_url;
-                nextButton.style.display = 'inline-flex';
-            } else {
-                // Если нет следующего вопроса, показываем кнопку "Завершить"
-                nextButton.href = "{% url 'topic_detail' topic_id=topic.id %}";
-                nextButton.innerHTML = '<i class="fas fa-flag-checkered me-2"></i> Завершить тест';
-                nextButton.style.display = 'inline-flex';
-            }
+            nextButton.href = data.next_url;
+            nextButton.style.display = 'inline-flex';
+            
+            // Добавляем явный обработчик клика (для подстраховки)
+            nextButton.onclick = function(e) {
+                e.preventDefault(); // Предотвращаем стандартное действие ссылки
+                window.location.href = data.next_url; // Явно перенаправляем
+            };
+        } else {
+            // Если нет следующего вопроса, показываем кнопку "Завершить"
+            nextButton.href = "{% url 'topic_detail' topic_id=topic.id %}";
+            nextButton.innerHTML = '<i class="fas fa-flag-checkered me-2"></i> Завершить тест';
+            nextButton.style.display = 'inline-flex';
+            
+            // Добавляем явный обработчик клика для завершения
+            nextButton.onclick = function(e) {
+                e.preventDefault();
+                window.location.href = nextButton.href;
+            };
+        }
         }
     });
 </script>
