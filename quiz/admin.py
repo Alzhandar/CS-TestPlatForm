@@ -6,7 +6,8 @@ from django.contrib import messages
 from django import forms
 import json
 from .models import Topic, Question, UserAnswer
-
+from django.utils.html import format_html
+from django.urls import reverse
 
 class ImportJsonForm(forms.Form):
     json_file = forms.FileField(label="Выберите JSON файл")
@@ -19,7 +20,7 @@ class ImportJsonForm(forms.Form):
 
 @admin.register(Topic)
 class TopicAdmin(admin.ModelAdmin):
-    list_display = ('title', 'get_questions_count', 'created_at', 'updated_at')
+    list_display = ('title', 'get_questions_count', 'created_at', 'updated_at', 'export_button')
     search_fields = ('title', 'description')
     list_filter = ('created_at', 'updated_at')
     date_hierarchy = 'created_at'
@@ -55,6 +56,15 @@ class TopicAdmin(admin.ModelAdmin):
                                 content_type='application/json')
         response['Content-Disposition'] = f'attachment; filename={topic.title}_questions.json'
         return response
+    
+    def export_button(self, obj):
+        """Добавляет кнопку экспорта JSON для каждой темы в списке"""
+        return format_html(
+            '<a class="button" href="{}">Экспорт JSON</a>',
+            reverse('admin:export_json_by_topic', args=[obj.pk])
+        )
+    export_button.short_description = 'Экспорт'
+    export_button.allow_tags = True
 
 
 class QuestionInline(admin.TabularInline):
@@ -130,6 +140,15 @@ class QuestionAdmin(admin.ModelAdmin):
             form = ImportJsonForm()
         
         return render(request, 'admin/quiz/import_json.html', {'form': form})
+    
+    def changelist_view(self, request, extra_context=None):
+        """Добавляем кнопку импорта на страницу списка вопросов"""
+        extra_context = extra_context or {}
+        extra_context['import_button'] = format_html(
+            '<a href="{}" class="button">Импортировать из JSON</a>',
+            reverse('admin:import_json')
+        )
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 @admin.register(UserAnswer)

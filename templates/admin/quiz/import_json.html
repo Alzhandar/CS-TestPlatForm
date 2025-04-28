@@ -1,0 +1,53 @@
+import_json.html -->
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='quiz' %}">Quiz</a>
+    &rsaquo; <a href="{% url 'admin:quiz_question_changelist' %}">{% trans 'Questions' %}</a>
+    &rsaquo; {% trans 'Import from JSON' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Импорт вопросов из JSON файла</h1>
+    <div>
+        <p>Формат JSON должен быть списком объектов, содержащих следующие поля:</p>
+        <pre>
+[
+    {
+        "text": "Текст вопроса",
+        "option1": "Вариант 1",
+        "option2": "Вариант 2",
+        "option3": "Вариант 3",
+        "option4": "Вариант 4",
+        "correct_option": 1, // число от 1 до 4
+        "explanation": "Объяснение (необязательно)"
+    },
+    // ... другие вопросы
+]
+        </pre>
+    </div>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <fieldset class="module aligned">
+            {% for field in form %}
+                <div class="form-row">
+                    {{ field.errors }}
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.help_text %}
+                        <div class="help">{{ field.help_text|safe }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </fieldset>
+        <div class="submit-row">
+            <input type="submit" value="Импортировать" class="default" />
+        </div>
+    </form>
+</div>
+{% endblock %}
