@@ -1,4 +1,3 @@
-import_json.html -->
 {% extends "admin/base_site.html" %}
 {% load i18n admin_urls %}
 
@@ -13,10 +12,12 @@ import_json.html -->
 
 {% block content %}
 <div id="content-main">
-    <h1>Импорт вопросов из JSON файла</h1>
-    <div>
-        <p>Формат JSON должен быть списком объектов, содержащих следующие поля:</p>
-        <pre>
+    <h1>Импорт вопросов из JSON файла или редактора</h1>
+    
+    <div class="help">
+        <h2>Формат JSON</h2>
+        <p>JSON должен содержать массив объектов со следующими полями:</p>
+        <pre style="background-color: #f8f8f8; padding: 10px; border-radius: 4px; overflow: auto;">
 [
     {
         "text": "Текст вопроса",
@@ -24,13 +25,22 @@ import_json.html -->
         "option2": "Вариант 2",
         "option3": "Вариант 3",
         "option4": "Вариант 4",
-        "correct_option": 1, // число от 1 до 4
+        "correct_option": 1,  // Число от 1 до 4, указывающее правильный ответ
         "explanation": "Объяснение (необязательно)"
     },
     // ... другие вопросы
 ]
         </pre>
     </div>
+    
+    {% if messages %}
+    <ul class="messagelist">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <fieldset class="module aligned">
@@ -49,5 +59,85 @@ import_json.html -->
             <input type="submit" value="Импортировать" class="default" />
         </div>
     </form>
+    
+    <!-- Добавляем кнопку для проверки JSON -->
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Кнопка для проверки JSON
+            const validateButton = document.createElement('button');
+            validateButton.textContent = 'Проверить JSON';
+            validateButton.type = 'button';
+            validateButton.className = 'button';
+            validateButton.style.marginTop = '10px';
+            
+            const jsonTextarea = document.querySelector('textarea[name="json_text"]');
+            if (jsonTextarea) {
+                jsonTextarea.parentNode.appendChild(validateButton);
+                
+                validateButton.addEventListener('click', function() {
+                    try {
+                        const jsonText = jsonTextarea.value.trim();
+                        if (!jsonText) {
+                            alert('JSON пуст. Нечего проверять.');
+                            return;
+                        }
+                        
+                        const parsedJson = JSON.parse(jsonText);
+                        
+                        if (!Array.isArray(parsedJson)) {
+                            alert('JSON должен быть массивом объектов!');
+                            return;
+                        }
+                        
+                        let isValid = true;
+                        let errorMsg = '';
+                        
+                        parsedJson.forEach((item, index) => {
+                            const fields = ['text', 'option1', 'option2', 'option3', 'option4', 'correct_option'];
+                            for (const field of fields) {
+                                if (!(field in item)) {
+                                    isValid = false;
+                                    errorMsg += `Вопрос #${index+1}: отсутствует поле "${field}"\n`;
+                                }
+                            }
+                            
+                            if (item.correct_option && (typeof item.correct_option !== 'number' || 
+                                item.correct_option < 1 || item.correct_option > 4)) {
+                                isValid = false;
+                                errorMsg += `Вопрос #${index+1}: поле "correct_option" должно быть числом от 1 до 4\n`;
+                            }
+                        });
+                        
+                        if (isValid) {
+                            alert(`JSON корректен. Найдено ${parsedJson.length} вопросов.`);
+                        } else {
+                            alert('Ошибки в JSON:\n' + errorMsg);
+                        }
+                    } catch (e) {
+                        alert('Ошибка при разборе JSON: ' + e.message);
+                    }
+                });
+            }
+            
+            // Улучшение текстового поля редактора
+            if (jsonTextarea) {
+                // Увеличиваем высоту редактора
+                jsonTextarea.style.minHeight = '300px';
+                
+                // Автоматическое форматирование при вставке
+                jsonTextarea.addEventListener('paste', function(e) {
+                    setTimeout(function() {
+                        try {
+                            const text = jsonTextarea.value;
+                            const json = JSON.parse(text);
+                            jsonTextarea.value = JSON.stringify(json, null, 4);
+                        } catch (e) {
+                            // Если не удалось распарсить JSON, оставляем как есть
+                        }
+                    }, 0);
+                });
+            }
+        });
+    </script>
 </div>
 {% endblock %}

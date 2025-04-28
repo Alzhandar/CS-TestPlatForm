@@ -10,13 +10,53 @@ from django.utils.html import format_html
 from django.urls import reverse
 
 class ImportJsonForm(forms.Form):
-    json_file = forms.FileField(label="Выберите JSON файл")
+    # Оставляем существующие поля
+    json_file = forms.FileField(
+        label="Выберите JSON файл", 
+        required=False,
+        help_text="Загрузите файл с вопросами в формате JSON"
+    )
     topic = forms.ModelChoiceField(
         queryset=Topic.objects.all(),
         label="Выберите тему для импорта",
         required=True
     )
-
+    # Добавляем поле для текстового ввода JSON
+    json_text = forms.CharField(
+        label="Или введите JSON напрямую",
+        widget=forms.Textarea(attrs={
+            'rows': 20,
+            'cols': 80,
+            'class': 'vLargeTextField',
+            'style': 'font-family: monospace; resize: both;',
+            'placeholder': '''[
+    {
+        "text": "Текст вопроса",
+        "option1": "Вариант 1",
+        "option2": "Вариант 2",
+        "option3": "Вариант 3",
+        "option4": "Вариант 4",
+        "correct_option": 1,
+        "explanation": "Объяснение (необязательно)"
+    }
+]'''
+        }),
+        required=False,
+        help_text="Введите вопросы в формате JSON. Либо загрузите файл, либо введите текст."
+    )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        json_file = cleaned_data.get('json_file')
+        json_text = cleaned_data.get('json_text')
+        
+        if not json_file and not json_text:
+            raise forms.ValidationError("Необходимо либо загрузить файл, либо ввести JSON текст")
+            
+        if json_file and json_text:
+            raise forms.ValidationError("Выберите только один способ ввода данных: файл или текст")
+        
+        return cleaned_data
 
 @admin.register(Topic)
 class TopicAdmin(admin.ModelAdmin):
@@ -74,7 +114,7 @@ class QuestionInline(admin.TabularInline):
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('text', 'topic', 'correct_option', 'created_at')
+    list_display = ('text', 'topic', 'correct_option', 'created_at', )
     list_filter = ('topic', 'created_at')
     search_fields = ('text', 'explanation')
     date_hierarchy = 'created_at'
@@ -112,28 +152,48 @@ class QuestionAdmin(admin.ModelAdmin):
             form = ImportJsonForm(request.POST, request.FILES)
             if form.is_valid():
                 topic = form.cleaned_data['topic']
-                json_file = request.FILES['json_file']
+                json_file = form.cleaned_data['json_file']
+                json_text = form.cleaned_data['json_text']
                 
                 try:
-                    data = json.loads(json_file.read().decode('utf-8'))
+                    if json_file:
+                        # Обработка файла (существующий код)
+                        data = json.loads(json_file.read().decode('utf-8'))
+                    else:
+                        # Обработка текстового ввода
+                        data = json.loads(json_text)
+                    
                     imported_count = 0
+                    errors_count = 0
                     
                     for item in data:
-                        if all(key in item for key in ['text', 'option1', 'option2', 'option3', 'option4', 'correct_option']):
-                            Question.objects.create(
-                                topic=topic,
-                                text=item['text'],
-                                option1=item['option1'],
-                                option2=item['option2'],
-                                option3=item['option3'],
-                                option4=item['option4'],
-                                correct_option=item['correct_option'],
-                                explanation=item.get('explanation', '')
-                            )
-                            imported_count += 1
+                        try:
+                            if all(key in item for key in ['text', 'option1', 'option2', 'option3', 'option4', 'correct_option']):
+                                Question.objects.create(
+                                    topic=topic,
+                                    text=item['text'],
+                                    option1=item['option1'],
+                                    option2=item['option2'],
+                                    option3=item['option3'],
+                                    option4=item['option4'],
+                                    correct_option=item['correct_option'],
+                                    explanation=item.get('explanation', '')
+                                )
+                                imported_count += 1
+                            else:
+                                errors_count += 1
+                        except Exception as e:
+                            errors_count += 1
                     
-                    messages.success(request, f'Успешно импортировано {imported_count} вопросов')
+                    if errors_count > 0:
+                        messages.warning(request, f'Импортировано {imported_count} вопросов, пропущено из-за ошибок: {errors_count}')
+                    else:
+                        messages.success(request, f'Успешно импортировано {imported_count} вопросов')
+                    
                     return redirect('..')
+                except json.JSONDecodeError as e:
+                    line_col = f" (строка {e.lineno}, позиция {e.colno})" if hasattr(e, 'lineno') else ""
+                    messages.error(request, f'Ошибка формата JSON{line_col}: {str(e)}')
                 except Exception as e:
                     messages.error(request, f'Ошибка при импорте: {str(e)}')
         else:
