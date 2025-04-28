@@ -16,8 +16,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-dev \
     libjpeg-dev \
     zlib1g-dev \
-    netcat-traditional \  # Добавлен netcat для проверки соединений
-    && rm -rf /var/lib/apt/lists/*
+    netcat-traditional && \  # Добавлен netcat для проверки соединений
+    rm -rf /var/lib/apt/lists/*  # Очистка кэша apt
 
 # Копирование и установка зависимостей
 COPY requirements.txt /app/
@@ -49,4 +49,5 @@ RUN chmod +x /app/entrypoint.sh
 # Открываем порт для приложения
 EXPOSE 8000
 
+# Основной скрипт для запуска
 ENTRYPOINT ["/app/entrypoint.sh"]
