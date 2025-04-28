@@ -9,6 +9,7 @@ ENV PYTHONUNBUFFERED 1
 ENV DJANGO_SETTINGS_MODULE core.settings
 
 # Установка необходимых системных пакетов
+# netcat-traditional добавлен для проверки соединений
 RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     libpq-dev \
@@ -16,8 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-dev \
     libjpeg-dev \
     zlib1g-dev \
-    netcat-traditional && \  # Добавлен netcat для проверки соединений
-    rm -rf /var/lib/apt/lists/*  # Очистка кэша apt
+    netcat-traditional && \
+    rm -rf /var/lib/apt/lists/*
 
 # Копирование и установка зависимостей
 COPY requirements.txt /app/
