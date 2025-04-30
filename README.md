@@ -1,61 +1,61 @@
 # CS Test Platform
 
-CS Test Platform - это продвинутое веб-приложение на основе Django, предназначенное для создания, управления и прохождения интерактивных тестов и викторин, преимущественно по темам Компьютерных Наук. Платформа предлагает комплексное решение для образовательных целей, самопроверки и валидации знаний.
+CS Test Platform is an advanced Django-based web application designed for creating, managing, and taking interactive tests and quizzes, primarily focused on Computer Science topics. The platform offers a comprehensive solution for educational purposes, self-assessment, and knowledge validation.
 
-## Ключевые особенности
+## Key Features
 
-- **Организация тестов по темам**: Тесты организованы по темам, что делает навигацию и обучение структурированными
-- **Интерактивная система тестирования**: Удобный интерфейс для ответов на вопросы с множественным выбором
-- **Отслеживание прогресса**: Мониторинг вашего прогресса по различным темам и тестам
-- **Личный кабинет**: Персональная статистика, достижения и отслеживание ошибок
-- **Таблица лидеров**: Система соревновательного рейтинга для сравнения результатов с другими пользователями
-- **Интерфейс администратора**: Комплексное управление вопросами, темами и данными пользователей
-- **Импорт/Экспорт JSON**: Легкое добавление или резервное копирование вопросов через формат JSON
-- **Адаптивный дизайн**: Работает на компьютерах, планшетах и мобильных устройствах
+- **Topic-based Test Organization**: Tests are organized by topics, making navigation and learning structured
+- **Interactive Testing System**: User-friendly interface for answering multiple-choice questions
+- **Progress Tracking**: Monitor your progress across various topics and tests
+- **Personal Dashboard**: Individual statistics, achievements, and error tracking
+- **Leaderboard**: Competitive ranking system to compare results with other users
+- **Admin Interface**: Comprehensive management of questions, topics, and user data
+- **JSON Import/Export**: Easy addition or backup of questions via JSON format
+- **Responsive Design**: Works on computers, tablets, and mobile devices
 
-## Технологии
+## Technologies
 
-- **Бэкенд**: Django 5.1, Python 3.12
-- **Фронтенд**: HTML5, CSS3, JavaScript, Bootstrap 5
-- **База данных**: PostgreSQL 16
-- **Развертывание**: Docker, Nginx, Gunicorn
-- **Аутентификация**: Встроенная система аутентификации Django
-- **Кэш**: Redis (опционально)
+- **Backend**: Django 5.1, Python 3.12
+- **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5
+- **Database**: PostgreSQL 16
+- **Deployment**: Docker, Nginx, Gunicorn
+- **Authentication**: Built-in Django authentication system
+- **Cache**: Redis (optional)
 
-## Начало работы
+## Getting Started
 
-### Предварительные требования
+### Prerequisites
 
 - Python 3.12+
-- PostgreSQL 16 (или Docker)
+- PostgreSQL 16 (or Docker)
 - Git
 
-### Локальная установка
+### Local Installation
 
-1. Клонировать репозиторий:
+1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/Cs-TestPlatform.git
    cd Cs-TestPlatform
    ```
 
-2. Создать и активировать виртуальное окружение:
+2. Create and activate a virtual environment:
    ```bash
    python -m venv myenv
-   source myenv/bin/activate  # На Windows: myenv\Scripts\activate
+   source myenv/bin/activate  # On Windows: myenv\Scripts\activate
    ```
 
-3. Установить зависимости:
+3. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Создать файл .env с необходимыми переменными окружения:
+4. Create a .env file with necessary environment variables:
    ```bash
    DEBUG=True
    SECRET_KEY=your-secret-key-here
    ALLOWED_HOSTS=localhost,127.0.0.1
    
-   # Настройки базы данных
+   # Database settings
    DB_NAME=testplatform
    DB_USER=postgres
    DB_PASSWORD=your-password
@@ -63,81 +63,81 @@ CS Test Platform - это продвинутое веб-приложение н�
    DB_PORT=5432
    ```
 
-5. Выполнить миграции:
+5. Run migrations:
    ```bash
    python manage.py migrate
    ```
 
-6. Создать суперпользователя:
+6. Create a superuser:
    ```bash
    python manage.py createsuperuser
    ```
 
-7. Запустить сервер разработки:
+7. Start the development server:
    ```bash
    python manage.py runserver
    ```
 
-8. Доступ к приложению по адресу: http://127.0.0.1:8000
+8. Access the application at: http://127.0.0.1:8000
 
-### Развертывание с помощью Docker
+### Deployment with Docker
 
-1. Убедитесь, что Docker и Docker Compose установлены
+1. Make sure Docker and Docker Compose are installed
 
-2. Создайте файл .env с переменными окружения (аналогично локальной установке, но с DB_HOST=db)
+2. Create a .env file with environment variables (similar to local installation, but with DB_HOST=db)
 
-3. Соберите и запустите контейнеры:
+3. Build and run the containers:
    ```bash
    docker-compose up -d
    ```
 
-4. Создайте суперпользователя:
+4. Create a superuser:
    ```bash
    docker-compose exec web python manage.py createsuperuser
    ```
 
-5. Доступ к приложению по адресу: http://localhost (или настроенный домен)
+5. Access the application at: http://localhost (or configured domain)
 
-## Руководство по использованию
+## Usage Guide
 
-### Функции администратора
+### Admin Functions
 
-1. **Добавление тем**: Войдите как администратор и добавьте темы через интерфейс администратора
-2. **Создание вопросов**: Добавляйте вопросы вручную или импортируйте их через JSON
-3. **Импорт вопросов**:
-   - Перейдите на страницу вопросов в админке
-   - Нажмите "Импортировать из JSON"
-   - Загрузите JSON-файл или вставьте JSON-содержимое в редактор
-   - Выберите тему и отправьте
+1. **Adding Topics**: Log in as an administrator and add topics through the admin interface
+2. **Creating Questions**: Add questions manually or import them via JSON
+3. **Importing Questions**:
+   - Go to the questions page in the admin panel
+   - Click "Import from JSON"
+   - Upload a JSON file or paste JSON content into the editor
+   - Select a topic and submit
 
-### Функции пользователя
+### User Functions
 
-1. **Прохождение тестов**: Просматривайте доступные темы и начинайте тесты
-2. **Отслеживание прогресса**: Просматривайте свой прогресс на странице профиля
-3. **Анализ ошибок**: Проверяйте свои прошлые ошибки для улучшения обучения
-4. **Таблица лидеров**: Сравнивайте свои результаты с другими пользователями
+1. **Taking Tests**: Browse available topics and start tests
+2. **Tracking Progress**: View your progress on the profile page
+3. **Error Analysis**: Check your past mistakes to improve learning
+4. **Leaderboard**: Compare your results with other users
 
-## Формат JSON для вопросов
+## JSON Format for Questions
 
 ```json
 [
   {
-    "text": "Текст вопроса",
-    "option1": "Первый вариант",
-    "option2": "Второй вариант",
-    "option3": "Третий вариант",
-    "option4": "Четвертый вариант",
+    "text": "Question text",
+    "option1": "First option",
+    "option2": "Second option",
+    "option3": "Third option",
+    "option4": "Fourth option",
     "correct_option": 1,
-    "explanation": "Опциональное объяснение ответа"
+    "explanation": "Optional explanation of the answer"
   },
   {
-    "text": "Другой вопрос",
-    "option1": "Вариант A",
-    "option2": "Вариант B",
-    "option3": "Вариант C",
-    "option4": "Вариант D",
+    "text": "Another question",
+    "option1": "Option A",
+    "option2": "Option B",
+    "option3": "Option C",
+    "option4": "Option D",
     "correct_option": 3,
-    "explanation": "Текст объяснения"
+    "explanation": "Explanation text"
   }
 ]
 ```
